@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 1920px; 
+            height: 1080px; 
+            background-color: black; 
+            overflow: hidden; 
+        }
+        /* object-fit ensures your 16:9 slides are perfectly letterboxed without stretching */
+        img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+        }
+    </style>
+</head>
+<body>
+    <img id="slide" src="" style="display:none;" />
+    
+    <script>
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'updateSlide') {
+                const img = document.getElementById('slide');
+                if (event.data.url === 'off' || event.data.url === '') {
+                    img.style.display = 'none';
+                } else {
+                    img.src = event.data.url;
+                    img.style.display = 'block';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
