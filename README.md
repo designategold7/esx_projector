@@ -1,6 +1,6 @@
 # ESX Holographic Projector
 
-A high-performance, server-synchronized presentation system designed for complex roleplay environments like the CID or Highway Patrol. 
+A high-performance, server-synchronized presentation system designed for law enforcement roleplay environments
 
 Unlike traditional projector scripts that use `AddReplaceTexture` (which notoriously causes `ERR_MEM_EMBEDDEDALLOC_ALLOC` crashes and invisible map textures), this system utilizes a spatial 3D render loop (`DrawSprite`) and a headless Chromium container. It renders presentations as a holographic billboard anchored to specific coordinates, guaranteeing perfect viewing angles, absolute server synchronization, and zero texture memory leaks.
 
