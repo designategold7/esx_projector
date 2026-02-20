@@ -57,7 +57,7 @@ Export your presentation (e.g., Google Slides, Case Jackets) as individual image
 * **CRITICAL:** The URLs *must* end in a valid image extension (e.g., `.png`, `.jpg`). Do not use album or gallery links.
 
 ### 3. Rank Permissions (`server.lua`)
-Update the `IsAuthorizedToPresent(xPlayer)` function to match your database's exact job and grade names. By default, it requires leadership or high command ranks within the `police` or `cid` jobs.
+Update the `IsAuthorizedToPresent(xPlayer)` function to match your database's exact job and grade names. By default, it requires supervisor grade within the default police job.
 
 ## Usage Guide
 
