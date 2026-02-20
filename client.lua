@@ -2,12 +2,11 @@ local duiObj = nil
 local txd = "script_rt_projector"
 local txn = "slides"
 
--- Configuration for the Holographic Screen
--- Set these coordinates to the exact spot on the wall where you want the slides to appear
+-- Holographic Screen Configuration
 local screenCoords = vector3(448.51, -985.00, 35.50) 
-local renderDistance = 25.0 -- How close players must be to see the presentation (optimizes performance)
-local slideWidth = 0.8 -- Base width of the projection
-local slideHeight = 0.45 -- Base height (maintains a perfect 16:9 aspect ratio)
+local renderDistance = 25.0 
+local slideWidth = 0.8 
+local slideHeight = 0.45 
 
 RegisterNetEvent('police_projector:updateUrl')
 AddEventHandler('police_projector:updateUrl', function(url)
@@ -22,11 +21,9 @@ AddEventHandler('police_projector:updateUrl', function(url)
     end
 
     if not duiObj then
-        -- Initialize the headless browser
         duiObj = CreateDui("nui://esx_projector/html/index.html", 1920, 1080)
         local duiHandle = GetDuiHandle(duiObj)
         
-        -- Create the runtime texture, but do NOT apply it to a prop
         local txdId = CreateRuntimeTxd(txd)
         CreateRuntimeTextureFromDuiHandle(txdId, txn, duiHandle)
         
@@ -39,7 +36,7 @@ AddEventHandler('police_projector:updateUrl', function(url)
     }))
 end)
 
--- The Native Spatial Render Loop
+-- Spatial Render Loop
 Citizen.CreateThread(function()
     while true do
         local wait = 1000
@@ -47,20 +44,11 @@ Citizen.CreateThread(function()
         if duiObj then
             local ped = PlayerPedId()
             local playerCoords = GetEntityCoords(ped)
-            local dist = #(playerCoords - screenCoords)
             
-            -- Only execute the draw loop if the player is actually in the briefing room
-            if dist < renderDistance then
+            if #(playerCoords - screenCoords) < renderDistance then
                 wait = 0
-                
-                -- Pin the 2D rendering context to the 3D wall coordinates
                 SetDrawOrigin(screenCoords.x, screenCoords.y, screenCoords.z, 0)
-                
-                -- Draw the CEF runtime texture into the world space
-                -- Parameters: TextureDict, TextureName, X, Y, Width, Height, Heading, R, G, B, Alpha
                 DrawSprite(txd, txn, 0.0, 0.0, slideWidth, slideHeight, 0.0, 255, 255, 255, 255)
-                
-                -- Release the drawing context back to normal
                 ClearDrawOrigin()
             end
         end
@@ -69,7 +57,7 @@ Citizen.CreateThread(function()
     end
 end)
 
--- ox_target Implementation for the Podium Laptop
+-- ox_target Implementation for Laptop/Podium
 Citizen.CreateThread(function()
     TriggerServerEvent('police_projector:requestSync')
     
@@ -82,31 +70,38 @@ Citizen.CreateThread(function()
         debug = false,
         options = {
             {
-                name = 'projector_next',
+                name = 'proj_start',
+                event = 'police_projector:clientControl',
+                icon = 'fa-solid fa-play',
+                label = 'Start Presentation',
+                action = 'start'
+            },
+            {
+                name = 'proj_next',
                 event = 'police_projector:clientControl',
                 icon = 'fa-solid fa-arrow-right',
                 label = 'Next Slide',
                 action = 'next'
             },
             {
-                name = 'projector_prev',
+                name = 'proj_prev',
                 event = 'police_projector:clientControl',
                 icon = 'fa-solid fa-arrow-left',
                 label = 'Previous Slide',
                 action = 'prev'
             },
             {
-                name = 'projector_add',
+                name = 'proj_add',
                 event = 'police_projector:clientControl',
                 icon = 'fa-solid fa-plus',
-                label = 'Add Slide URL',
+                label = 'Emergency Add URL',
                 action = 'add'
             },
             {
-                name = 'projector_clear',
+                name = 'proj_clear',
                 event = 'police_projector:clientControl',
-                icon = 'fa-solid fa-trash',
-                label = 'Clear Presentation',
+                icon = 'fa-solid fa-power-off',
+                label = 'Turn Projector Off',
                 action = 'clear'
             }
         }
@@ -115,8 +110,8 @@ end)
 
 AddEventHandler('police_projector:clientControl', function(data)
     if data.action == 'add' then
-        local input = exports.ox_lib:inputDialog('Add Slide', {
-            {type = 'input', label = 'Direct Image URL', description = 'Must be a direct link to an image (e.g., Imgur .png)', required = true}
+        local input = exports.ox_lib:inputDialog('Emergency Add Slide', {
+            {type = 'input', label = 'Direct Image URL', required = true}
         })
         
         if input and input[1] then
