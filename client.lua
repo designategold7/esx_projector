@@ -107,7 +107,6 @@ Citizen.CreateThread(function()
         }
     })
 end)
-
 AddEventHandler('police_projector:clientControl', function(data)
     if data.action == 'add' then
         local input = exports.ox_lib:inputDialog('Emergency Add Slide', {
