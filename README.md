@@ -1,67 +1,30 @@
-# ESX Holographic Projector
+#  Standalone Holographic Projector 
 
-A high-performance, server-synchronized presentation system designed for law enforcement roleplay environments
+A lightweight, standalone FiveM resource that allows players to dynamically place and anchor holographic web-screens in the game world. Designed for the Arkansas State Roleplay community to facilitate realistic briefings without external dashboard dependencies.
 
-Unlike traditional projector scripts that use `AddReplaceTexture` (which notoriously causes `ERR_MEM_EMBEDDEDALLOC_ALLOC` crashes and invisible map textures), this system utilizes a spatial 3D render loop (`DrawSprite`) and a headless Chromium container. It renders presentations as a holographic billboard anchored to specific coordinates, guaranteeing perfect viewing angles, absolute server synchronization, and zero texture memory leaks.
+##  Features
+* **Dynamic Placement**: Use a ghost-prop preview to align your hologram perfectly before anchoring.
+* **Direct URL Injection**: In-game prompt allows you to point the projector at any valid `http/https` URL.
+* **VRAM Optimized**: Uses unique runtime texture dictionaries (TXD) to prevent the "Purple Texture" memory leak.
+* **Standalone Architecture**: No ESX/QB-Core or Database dependencies required.
 
-## Key Features
+##  Installation
+1. Download the repository files.
+2. Place the `esx_projector` folder into your server's `resources` directory.
+3. Add `ensure esx_projector` to your `server.cfg`.
+4. (Optional) Edit the `prop_model` in `client.lua` if you wish to use a custom holographic entity.
 
-* **Zero Texture Leaks:** Bypasses `.ytd` manipulation entirely. Projects the CEF instance directly into the 3D world space.
-* **Perfect Server Sync:** Presentations are managed via a server-sided image array. Late-joining players instantly sync to the active slide.
-* **ox_target Integration:** Presenters control the slides natively by interacting with a physical prop (like a laptop or podium) in the briefing room.
-* **Secure Execution:** Strict job and rank hierarchy checks prevent unauthorized personnel from hijacking the presentation.
-* **Emergency Injection:** Authorized command members can inject new image URLs live during a briefing using an `ox_lib` input dialog.
+##  How to Use
+1. Use the command `/hologram` in-game.
+2. Move your crosshair to position the "Ghost" preview.
+3. Press **[E]** to lock the position.
+4. An input box will appear—type or paste your desired URL (e.g., `https://google.com`).
+5. The hologram will anchor and begin streaming.
 
-## Dependencies
+##  Troubleshooting & Optimization
+* **Blank Screen**: Ensure the URL begins with `https://`. If it still fails, check your local firewall settings.
+* **Texture Loss**: This script is capped at 720p. Avoid placing more than 5 holograms in a single area to stay within GTA V's VRAM limits.
+* **Performance**: The script runs at **0.00ms** when idle.
 
-Ensure the following resources are installed, running, and up-to-date:
-* `es_extended` 
-* `ox_lib`
-* `ox_target`
-
-## Installation
-
-1. Clone the repository into your `resources` folder:
-   ```bash
-   git clone [https://github.com/designategold7/esx_projector.git](https://github.com/designategold7/esx_projector.git)
-   ```
-2. Ensure your file structure perfectly matches the following:
-   ```text
-   esx_projector/
-   ├── html/
-   │   └── index.html
-   ├── client.lua
-   ├── server.lua
-   └── fxmanifest.lua
-   ```
-3. Add the resource to your `server.cfg`. **Start order is critical.**
-   ```text
-   ensure ox_lib
-   ensure ox_target
-   ensure es_extended
-   ensure esx_projector
-   ```
-
-## Configuration
-
-Before restarting your server, you must adapt the script to your specific MLO and departmental hierarchy.
-
-### 1. Spatial Coordinates (`client.lua`)
-You must define where the projector screen hovers in the air, and where the presenter stands to control it.
-* `screenCoords`: The `vector3` coordinates on the wall where the presentation will be drawn.
-* `laptopCoords`: The `vector3` coordinates of the physical object (laptop/podium) the presenter must `ox_target` to change slides.
-
-### 2. The Image Array (`server.lua`)
-Export your presentation (e.g., Google Slides, Case Jackets) as individual image files and upload them to a direct image host.
-* Place the direct URLs into the `slidesArray` at the top of `server.lua`. 
-* **CRITICAL:** The URLs *must* end in a valid image extension (e.g., `.png`, `.jpg`). Do not use album or gallery links.
-
-### 3. Rank Permissions (`server.lua`)
-Update the `IsAuthorizedToPresent(xPlayer)` function to match your database's exact job and grade names. By default, it requires supervisor grade within the default police job.
-
-## Usage Guide
-
-1.  **Start Presentation:** Target the configured laptop and select "Start Presentation" to turn on the screen and load Slide 1.
-2.  **Navigation:** Target the laptop to advance to the "Next Slide" or return to the "Previous Slide".
-3.  **Emergency Add:** If a new piece of evidence is discovered mid-briefing, select "Emergency Add URL" to append a new direct image link to the end of the live presentation.
-4.  **Clear:** Select "Turn Projector Off" to instantly terminate the presentation and clear the screen for all players.
+---
+*Maintained by Poke Bayou Farms LLC (@designategold7)*
