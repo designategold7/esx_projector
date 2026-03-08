@@ -1,122 +1,54 @@
-local duiObj = nil
-local txd = "script_rt_projector"
-local txn = "slides"
+local isPlacing, ghostObj, activeDuis = false, nil, {}
+function GetCoords()
+    local cam = GetGameplayCamCoords()
+    local endC = cam + (RotationToDirection(GetGameplayCamRot(2)) * 15.0)
+    local ray = StartShapeTestRay(cam.x, cam.y, cam.z, endC.x, endC.y, endC.z, -1, PlayerPedId(), 0)
+    local _, hit, coords = GetShapeTestResult(ray)
+    return hit, coords
+end
+RegisterCommand('hologram', function()
+    if isPlacing then return end
+    isPlacing = true
+    local model = `prop_area_monitor_01`
+    RequestModel(model)
+    while not HasModelLoaded(model) do Wait(0) end
+    ghostObj = CreateObject(model, 0, 0, 0, false, false, false)
+    SetEntityAlpha(ghostObj, 150)
+    SetEntityCollision(ghostObj, false)
 
--- Holographic Screen Configuration
-local screenCoords = vector3(448.51, -985.00, 35.50) 
-local renderDistance = 25.0 
-local slideWidth = 0.8 
-local slideHeight = 0.45 
-
-RegisterNetEvent('police_projector:updateUrl')
-AddEventHandler('police_projector:updateUrl', function(url)
-    if url == "off" then
-        if duiObj then
-            SendDuiMessage(duiObj, json.encode({
-                type = 'updateSlide',
-                url = 'off'
-            }))
-        end
-        return
-    end
-
-    if not duiObj then
-        duiObj = CreateDui("nui://esx_projector/html/index.html", 1920, 1080)
-        local duiHandle = GetDuiHandle(duiObj)
-        
-        local txdId = CreateRuntimeTxd(txd)
-        CreateRuntimeTextureFromDuiHandle(txdId, txn, duiHandle)
-        
-        Wait(500)
-    end
-    
-    SendDuiMessage(duiObj, json.encode({
-        type = 'updateSlide',
-        url = url
-    }))
-end)
-
--- Spatial Render Loop
-Citizen.CreateThread(function()
-    while true do
-        local wait = 1000
-        
-        if duiObj then
-            local ped = PlayerPedId()
-            local playerCoords = GetEntityCoords(ped)
-            
-            if #(playerCoords - screenCoords) < renderDistance then
-                wait = 0
-                SetDrawOrigin(screenCoords.x, screenCoords.y, screenCoords.z, 0)
-                DrawSprite(txd, txn, 0.0, 0.0, slideWidth, slideHeight, 0.0, 255, 255, 255, 255)
-                ClearDrawOrigin()
+    Citizen.CreateThread(function()
+        while isPlacing do
+            local hit, coords = GetCoords()
+            if hit then SetEntityCoords(ghostObj, coords.x, coords.y, coords.z) end
+            if IsControlJustPressed(0, 38) then -- 'E' to Place
+                isPlacing = false
+                local url = "https://www.google.com" -- Default, can be prompted
+                AnchorHologram(coords, GetEntityRotation(ghostObj), url)
             end
+            Wait(0)
         end
-        
-        Wait(wait)
-    end
+    end)
 end)
+function AnchorHologram(coords, rot, url)
+    DeleteObject(ghostObj)
+    local obj = CreateObject(`prop_area_monitor_01`, coords.x, coords.y, coords.z, true, true, true)
+    SetEntityRotation(obj, rot.x, rot.y, rot.z, 2, true)
+    FreezeEntityPosition(obj, true)
 
--- ox_target Implementation for Laptop/Podium
-Citizen.CreateThread(function()
-    TriggerServerEvent('police_projector:requestSync')
+    local dui = CreateDui(url, 1280, 720)
+    local handle = GetDuiHandle(dui)
+    local txd = CreateRuntimeTxd("Holo_"..obj)
+    CreateRuntimeTextureFromDuiHandle(txd, "tex", handle)
+    AddReplaceTexture('prop_area_monitor_01', 'script_rt_screen', "Holo_"..obj, "tex")
     
-    local laptopCoords = vector3(448.51, -988.35, 34.97) 
-    
-    exports.ox_target:addBoxZone({
-        coords = laptopCoords,
-        size = vector3(1.5, 1.5, 1.5),
-        rotation = 0.0,
-        debug = false,
-        options = {
-            {
-                name = 'proj_start',
-                event = 'police_projector:clientControl',
-                icon = 'fa-solid fa-play',
-                label = 'Start Presentation',
-                action = 'start'
-            },
-            {
-                name = 'proj_next',
-                event = 'police_projector:clientControl',
-                icon = 'fa-solid fa-arrow-right',
-                label = 'Next Slide',
-                action = 'next'
-            },
-            {
-                name = 'proj_prev',
-                event = 'police_projector:clientControl',
-                icon = 'fa-solid fa-arrow-left',
-                label = 'Previous Slide',
-                action = 'prev'
-            },
-            {
-                name = 'proj_add',
-                event = 'police_projector:clientControl',
-                icon = 'fa-solid fa-plus',
-                label = 'Emergency Add URL',
-                action = 'add'
-            },
-            {
-                name = 'proj_clear',
-                event = 'police_projector:clientControl',
-                icon = 'fa-solid fa-power-off',
-                label = 'Turn Projector Off',
-                action = 'clear'
-            }
-        }
-    })
-end)
-AddEventHandler('police_projector:clientControl', function(data)
-    if data.action == 'add' then
-        local input = exports.ox_lib:inputDialog('Emergency Add Slide', {
-            {type = 'input', label = 'Direct Image URL', required = true}
-        })
-        
-        if input and input[1] then
-            TriggerServerEvent('police_projector:controlSlide', 'add', input[1])
+    activeDuis[obj] = {dui = dui, txd = txd}
+end
+-- Cleanup to prevent "Memory Leaks" and "Texture Loss"
+AddEventHandler('onResourceStop', function(res)
+    if res == GetCurrentResourceName() then
+        for obj, data in pairs(activeDuis) do
+            DestroyDui(data.dui)
+            DeleteObject(obj)
         end
-    else
-        TriggerServerEvent('police_projector:controlSlide', data.action)
     end
 end)
