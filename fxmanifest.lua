@@ -1,19 +1,7 @@
 fx_version 'cerulean'
 game 'gta5'
+author 'Poke Bayou Farms LLC'
+description 'Standalone Holographic Projector'
 
-description 'Sentry Holographic Projector for AR State RP'
-version '1.0.0'
-
-client_scripts {
-    'config.lua',
-    'client/main.lua'
-}
-
-server_scripts {
-    'config.lua',
-    'server/main.lua'
-}
-
-dependencies {
-    'es_extended'
-}
+client_script 'client.lua'
+server_script 'server.lua'
