@@ -1,18 +1,19 @@
 fx_version 'cerulean'
 game 'gta5'
-lua54 'yes'
 
-shared_script '@es_extended/imports.lua'
+description 'Sentry Holographic Projector for AR State RP'
+version '1.0.0'
 
 client_scripts {
-    'client.lua'
+    'config.lua',
+    'client/main.lua'
 }
 
 server_scripts {
-    'server.lua'
+    'config.lua',
+    'server/main.lua'
 }
 
--- You must declare the local HTML file so the CEF can access it natively
-files {
-    'html/index.html'
+dependencies {
+    'es_extended'
 }
